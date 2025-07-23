@@ -1,5 +1,9 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.urls import path, reverse
+from django.http import HttpResponseRedirect
+from django.contrib import messages
+from django.utils import timezone
 
 from .models import (Article, Categorie, Commande, CommandeItem, Panier,
                      PanierItem)
@@ -94,6 +98,60 @@ class CommandeAdmin(admin.ModelAdmin):
     ]
     inlines = [CommandeItemInline]
     ordering = ['-created_at']
+    actions = ['export_commandes_csv']
 
     def has_add_permission(self, request):
         return False
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'export-csv/',
+                self.admin_site.admin_view(self.export_csv_view),
+                name='boutique_commande_export_csv',
+            ),
+            path(
+                'import-csv/',
+                self.admin_site.admin_view(self.import_csv_view),
+                name='boutique_commande_import_csv',
+            ),
+        ]
+        return custom_urls + urls
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update({
+            'export_csv_url': reverse('admin:boutique_commande_export_csv'),
+            'import_csv_url': reverse('admin:boutique_commande_import_csv'),
+        })
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def export_csv_view(self, request):
+        """Redirige vers l'API d'export CSV"""
+        from django.urls import reverse
+        api_url = reverse('boutique_api:export_commandes_csv')
+        return HttpResponseRedirect(api_url)
+
+    def import_csv_view(self, request):
+        """Vue pour afficher le formulaire d'import CSV"""
+        if request.method == 'POST' and request.FILES.get('csv_file'):
+            # Rediriger vers l'API d'import ou le dashboard pour l'import
+            try:
+                messages.success(request, "Utilisez le dashboard ou l'API directement pour l'import CSV.")
+            except Exception as e:
+                messages.error(request, f"Erreur lors de l'import: {e}")
+            
+            return HttpResponseRedirect(reverse('admin:boutique_commande_changelist'))
+        
+        # Afficher le formulaire d'import
+        from django.shortcuts import render
+        return render(request, 'admin/boutique/commande/import_csv.html')
+
+    def export_commandes_csv(self, request, queryset):
+        """Action pour exporter les commandes sélectionnées en CSV"""
+        from django.urls import reverse
+        api_url = reverse('boutique_api:export_commandes_csv')
+        return HttpResponseRedirect(api_url)
+    
+    export_commandes_csv.short_description = "Exporter les commandes en CSV"

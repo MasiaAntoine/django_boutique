@@ -1,0 +1,16 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+    <li>
+        <a href="{% url 'boutique_api:export_commandes_csv' %}" class="addlink">
+            Exporter CSV
+        </a>
+    </li>
+    <li>
+        <a href="{% url 'admin:boutique_commande_import_csv' %}" class="addlink">
+            Importer CSV
+        </a>
+    </li>
+{% endblock %}

@@ -24,6 +24,7 @@ urlpatterns = [
     path('', include('boutique.urls')),
     path('accounts/', include('accounts.urls')),
     path('dashboard/', include('dashboard.urls')),
+    path('api/', include('boutique.api_urls')),
 ]
 
 # Ajout des URLs pour servir les fichiers media en développement

@@ -1,0 +1,89 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block title %}Importer des commandes CSV{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Accueil</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='boutique' %}">Boutique</a>
+    &rsaquo; <a href="{% url 'admin:boutique_commande_changelist' %}">Commandes</a>
+    &rsaquo; Importer CSV
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Importer des commandes depuis un fichier CSV</h1>
+
+<div class="module aligned">
+    <div class="form-row">
+        <div class="fieldset">
+            <h2>Instructions</h2>
+            <p>Cette fonctionnalité permet d'importer des commandes depuis un fichier CSV.</p>
+            
+            <h3>Format requis :</h3>
+            <ul>
+                <li><strong>Séparateur :</strong> Point-virgule (;)</li>
+                <li><strong>Encodage :</strong> UTF-8</li>
+                <li><strong>Colonnes obligatoires :</strong>
+                    <ul>
+                        <li>Numero_Commande</li>
+                        <li>Client_Username</li>
+                        <li>Total_Commande</li>
+                    </ul>
+                </li>
+                <li><strong>Colonnes optionnelles :</strong>
+                    <ul>
+                        <li>Statut</li>
+                        <li>Adresse_Livraison</li>
+                        <li>Telephone</li>
+                        <li>Notes</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="module aligned">
+    <h2>Méthodes d'import disponibles</h2>
+    
+    <div class="form-row">
+        <h3>1. Via le Dashboard (recommandé)</h3>
+        <p>
+            <a href="{% url 'dashboard:dashboard' %}" class="button default">
+                Aller au Dashboard
+            </a>
+        </p>
+        <p>Le dashboard offre une interface complète avec gestion des erreurs et feedback en temps réel.</p>
+    </div>
+    
+    <div class="form-row">
+        <h3>2. Via l'API directement</h3>
+        <p>
+            Endpoint : <code>POST /api/commandes/import/csv/</code><br>
+            Paramètre : <code>csv_file</code> (fichier)
+        </p>
+        <p>
+            <a href="{% url 'boutique_api:api_status' %}" class="button" target="_blank">
+                Voir le statut de l'API
+            </a>
+        </p>
+    </div>
+</div>
+
+<div class="module aligned">
+    <h2>Export CSV</h2>
+    <p>Vous pouvez également exporter les commandes existantes pour voir le format attendu :</p>
+    <p>
+        <a href="{% url 'boutique_api:export_commandes_csv' %}" class="button default">
+            Télécharger CSV des commandes du jour
+        </a>
+    </p>
+</div>
+
+<div class="submit-row">
+    <a href="{% url 'admin:boutique_commande_changelist' %}" class="button">Retour à la liste</a>
+</div>
+
+{% endblock %}
