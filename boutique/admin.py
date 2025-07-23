@@ -1,9 +1,8 @@
-from django.contrib import admin
-from django.utils.html import format_html
-from django.urls import path, reverse
+from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
-from django.contrib import messages
+from django.urls import path, reverse
 from django.utils import timezone
+from django.utils.html import format_html
 
 from .models import (Article, Categorie, Commande, CommandeItem, Panier,
                      PanierItem)
@@ -141,9 +140,9 @@ class CommandeAdmin(admin.ModelAdmin):
                 messages.success(request, "Utilisez le dashboard ou l'API directement pour l'import CSV.")
             except Exception as e:
                 messages.error(request, f"Erreur lors de l'import: {e}")
-            
+
             return HttpResponseRedirect(reverse('admin:boutique_commande_changelist'))
-        
+
         # Afficher le formulaire d'import
         from django.shortcuts import render
         return render(request, 'admin/boutique/commande/import_csv.html')
@@ -153,5 +152,5 @@ class CommandeAdmin(admin.ModelAdmin):
         from django.urls import reverse
         api_url = reverse('boutique_api:export_commandes_csv')
         return HttpResponseRedirect(api_url)
-    
+
     export_commandes_csv.short_description = "Exporter les commandes en CSV"

@@ -201,11 +201,11 @@
       const formData = new FormData(form);
       const resultsDiv = document.getElementById('importResults');
       const importBtn = this;
-      
+
       // Désactiver le bouton pendant l'import
       importBtn.disabled = true;
       importBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Import en cours...';
-      
+
       fetch('{% url "boutique_api:import_commandes_csv" %}', {
         method: 'POST',
         body: formData,
@@ -216,7 +216,7 @@
       .then(response => response.json())
       .then(data => {
         resultsDiv.style.display = 'block';
-        
+
         if (data.success) {
           resultsDiv.innerHTML = `
             <div class="alert alert-success">

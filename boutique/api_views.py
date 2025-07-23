@@ -1,14 +1,16 @@
 import csv
 import io
+import json
 from datetime import date
-from django.http import HttpResponse, JsonResponse
+
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.views.decorators.http import require_http_methods
+from django.core.exceptions import ValidationError
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from django.core.exceptions import ValidationError
+from django.views.decorators.http import require_http_methods
+
 from boutique.models import Commande, CommandeItem
-import json
 
 
 def is_superuser(user):
@@ -35,12 +37,12 @@ def export_commandes_csv(request):
                 }, status=400)
         else:
             target_date = timezone.now().date()
-        
+
         # Récupérer les commandes du jour
         commandes = Commande.objects.filter(
             created_at__date=target_date
         ).select_related('user').prefetch_related('items')
-        
+
         # Créer la réponse CSV
         response = HttpResponse(
             content_type='text/csv; charset=utf-8',
@@ -48,12 +50,12 @@ def export_commandes_csv(request):
                 'Content-Disposition': f'attachment; filename="commandes_{target_date.strftime("%Y%m%d")}.csv"'
             }
         )
-        
+
         # Ajouter le BOM UTF-8 pour Excel
         response.write('\ufeff')
-        
+
         writer = csv.writer(response, delimiter=';')
-        
+
         # En-têtes CSV
         headers = [
             'Numero_Commande',
@@ -71,7 +73,7 @@ def export_commandes_csv(request):
             'Articles_Details'
         ]
         writer.writerow(headers)
-        
+
         # Données des commandes
         for commande in commandes:
             # Détails des articles
@@ -80,7 +82,7 @@ def export_commandes_csv(request):
                 articles_details.append(
                     f"{item.article_nom} (Qté: {item.quantite}, Prix: {item.prix_unitaire}€, Sous-total: {item.sous_total}€)"
                 )
-            
+
             row = [
                 commande.numero_commande,
                 commande.created_at.strftime('%Y-%m-%d %H:%M:%S'),
@@ -97,9 +99,9 @@ def export_commandes_csv(request):
                 ' | '.join(articles_details)
             ]
             writer.writerow(row)
-        
+
         return response
-        
+
     except Exception as e:
         return JsonResponse({
             'error': f'Erreur lors de l\'export: {str(e)}'
@@ -119,22 +121,22 @@ def import_commandes_csv(request):
             return JsonResponse({
                 'error': 'Aucun fichier CSV fourni'
             }, status=400)
-        
+
         csv_file = request.FILES['csv_file']
-        
+
         if not csv_file.name.endswith('.csv'):
             return JsonResponse({
                 'error': 'Le fichier doit être au format CSV'
             }, status=400)
-        
+
         # Lire le fichier CSV
         decoded_file = csv_file.read().decode('utf-8-sig')  # Support du BOM UTF-8
         io_string = io.StringIO(decoded_file)
         reader = csv.DictReader(io_string, delimiter=';')
-        
+
         imported_count = 0
         errors = []
-        
+
         for row_num, row in enumerate(reader, start=2):  # Start=2 car ligne 1 = headers
             try:
                 # Validation des champs requis
@@ -142,12 +144,12 @@ def import_commandes_csv(request):
                 for field in required_fields:
                     if not row.get(field):
                         raise ValidationError(f'Champ requis manquant: {field}')
-                
+
                 # Vérifier si la commande existe déjà
                 if Commande.objects.filter(numero_commande=row['Numero_Commande']).exists():
                     errors.append(f"Ligne {row_num}: Commande {row['Numero_Commande']} déjà existante")
                     continue
-                
+
                 # Récupérer ou créer l'utilisateur
                 try:
                     from django.contrib.auth.models import User
@@ -155,11 +157,11 @@ def import_commandes_csv(request):
                 except User.DoesNotExist:
                     errors.append(f"Ligne {row_num}: Utilisateur {row['Client_Username']} introuvable")
                     continue
-                
+
                 # Convertir le total (format français vers décimal)
                 total_str = row['Total_Commande'].replace(',', '.')
                 total = float(total_str)
-                
+
                 # Créer la commande
                 commande = Commande.objects.create(
                     numero_commande=row['Numero_Commande'],
@@ -170,18 +172,18 @@ def import_commandes_csv(request):
                     telephone=row.get('Telephone', ''),
                     notes=row.get('Notes', '')
                 )
-                
+
                 imported_count += 1
-                
+
             except Exception as e:
                 errors.append(f"Ligne {row_num}: {str(e)}")
-        
+
         return JsonResponse({
             'success': True,
             'imported_count': imported_count,
             'errors': errors
         })
-        
+
     except Exception as e:
         return JsonResponse({
             'error': f'Erreur lors de l\'import: {str(e)}'
@@ -211,7 +213,7 @@ def api_status(request):
     """
     today = timezone.now().date()
     commandes_count = Commande.objects.filter(created_at__date=today).count()
-    
+
     return JsonResponse({
         'status': 'OK',
         'date': today.isoformat(),
