@@ -1,0 +1,29 @@
+# Ignorer tous les fichiers du projet
+*
+
+# Ignorer spécifiquement les templates Django
+templates/
+*.html
+
+# Ignorer les fichiers Python
+*.py
+
+# Ignorer les fichiers de configuration Django
+*.json
+*.yml
+*.yaml
+
+# Ignorer les fichiers de données
+*.sqlite3
+*.db
+
+# Ignorer les dossiers de migration
+*/migrations/
+
+# Ignorer les fichiers statiques
+static/
+media/
+
+# Ignorer les fichiers de l'environnement virtuel
+.venv/
+venv/
