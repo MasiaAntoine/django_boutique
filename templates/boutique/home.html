@@ -48,7 +48,14 @@
                         <div class="col-md-4 col-lg-2 mb-3">
                             <div class="card h-100">
                                 {% if article.image %}
-                                    <img src="{{ article.image.url }}" class="card-img-top" style="height: 150px; object-fit: cover;" alt="{{ article.nom }}">
+                                    <img src="{{ article.image.url }}"
+                                         class="card-img-top"
+                                         style="height: 150px; object-fit: cover;"
+                                         alt="{{ article.nom }}"
+                                         onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none'); this.nextElementSibling.classList.add('d-flex');">
+                                    <div class="card-img-top bg-light align-items-center justify-content-center d-none" style="height: 150px;">
+                                        <i class="fas fa-image text-muted fa-2x"></i>
+                                    </div>
                                 {% else %}
                                     <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
                                         <i class="fas fa-image text-muted fa-2x"></i>
@@ -105,7 +112,14 @@
                     <div class="col-md-6 col-lg-4 col-xl-3 mb-4">
                         <div class="card h-100 shadow-sm">
                             {% if article.image %}
-                                <img src="{{ article.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ article.nom }}">
+                                <img src="{{ article.image.url }}"
+                                     class="card-img-top"
+                                     style="height: 200px; object-fit: cover;"
+                                     alt="{{ article.nom }}"
+                                     onerror="this.style.display='none'; this.nextElementSibling.classList.remove('d-none'); this.nextElementSibling.classList.add('d-flex');">
+                                <div class="card-img-top bg-light align-items-center justify-content-center d-none" style="height: 200px;">
+                                    <i class="fas fa-image text-muted fa-3x"></i>
+                                </div>
                             {% else %}
                                 <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
                                     <i class="fas fa-image text-muted fa-3x"></i>

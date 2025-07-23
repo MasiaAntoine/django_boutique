@@ -162,9 +162,6 @@ Temporary Items
 *.swo
 *~
 
-# Media files (uploads)
-media/
-
 # Static files (production)
 staticfiles/
 static/
