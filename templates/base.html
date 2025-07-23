@@ -15,11 +15,11 @@
             <a class="navbar-brand" href="{% url 'boutique:home' %}">
                 <i class="fas fa-store"></i> Boutique
             </a>
-            
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
@@ -28,7 +28,7 @@
                         </a>
                     </li>
                 </ul>
-                
+
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                         {% if user.is_superuser %}
@@ -44,7 +44,15 @@
                             </li>
                         {% else %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'accounts:profile' %}">
+                                <a class="nav-link" href="{% url 'boutique:panier' %}">
+                                    <i class="fas fa-shopping-cart"></i> Panier
+                                    {% if panier_total %}
+                                        <span class="badge bg-warning text-dark">{{ panier_total }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'boutique:compte_client' %}">
                                     <i class="fas fa-user"></i> Mon compte
                                 </a>
                             </li>
@@ -54,9 +62,21 @@
                                 <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
                             </a>
                             <ul class="dropdown-menu">
+                                {% if not user.is_superuser %}
+                                    <li><a class="dropdown-item" href="{% url 'boutique:compte_client' %}">Mon compte</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'boutique:mes_commandes' %}">Mes commandes</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
                                 <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Profil</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">Déconnexion</a></li>
+                                <li>
+                                    <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item border-0 bg-transparent">
+                                            <i class="fas fa-sign-out-alt"></i> Déconnexion
+                                        </button>
+                                    </form>
+                                </li>
                             </ul>
                         </li>
                     {% else %}

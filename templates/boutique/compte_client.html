@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-user"></i> Mon compte</h1>
+
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Menu du compte -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'boutique:compte_client' %}" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-dashboard"></i> Tableau de bord
+                        </a>
+                        <a href="{% url 'boutique:mes_commandes' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-box"></i> Mes commandes
+                        </a>
+                        <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-edit"></i> Modifier mon profil
+                        </a>
+                        <a href="{% url 'boutique:panier' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-shopping-cart"></i> Mon panier
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <!-- Informations du compte -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-info-circle"></i> Informations personnelles</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <p><strong>Nom d'utilisateur :</strong><br>{{ user.username }}</p>
+                                <p><strong>Email :</strong><br>{{ user.email }}</p>
+                            </div>
+                            <div class="col-sm-6">
+                                <p><strong>Nom complet :</strong><br>
+                                    {% if user.first_name or user.last_name %}
+                                        {{ user.first_name }} {{ user.last_name }}
+                                    {% else %}
+                                        <em class="text-muted">Non renseigné</em>
+                                    {% endif %}
+                                </p>
+                                <p><strong>Membre depuis :</strong><br>{{ user.date_joined|date:"d/m/Y" }}</p>
+                            </div>
+                        </div>
+
+                        {% if user.profile.phone or user.profile.address %}
+                            <hr>
+                            {% if user.profile.phone %}
+                                <p><strong>Téléphone :</strong><br>{{ user.profile.phone }}</p>
+                            {% endif %}
+                            {% if user.profile.address %}
+                                <p><strong>Adresse :</strong><br>{{ user.profile.address }}</p>
+                            {% endif %}
+                        {% endif %}
+
+                        <a href="{% url 'accounts:profile' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit"></i> Modifier mes informations
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Statistiques rapides -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="text-primary">{{ user.commandes.count }}</h3>
+                                <p class="mb-0">Commande{{ user.commandes.count|pluralize }} passée{{ user.commandes.count|pluralize }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="text-success">{{ total_depense }}€</h3>
+                                <p class="mb-0">Total dépensé</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dernières commandes -->
+                {% if dernieres_commandes %}
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="fas fa-box"></i> Dernières commandes</h5>
+                            <a href="{% url 'boutique:mes_commandes' %}" class="btn btn-outline-primary btn-sm">
+                                Voir toutes mes commandes
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% for commande in dernieres_commandes %}
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <strong>Commande #{{ commande.numero_commande }}</strong><br>
+                                        <small class="text-muted">{{ commande.created_at|date:"d/m/Y à H:i" }}</small><br>
+                                        <span class="badge
+                                            {% if commande.statut == 'confirmee' %}bg-success
+                                            {% elif commande.statut == 'expediee' %}bg-primary
+                                            {% elif commande.statut == 'livree' %}bg-info
+                                            {% elif commande.statut == 'annulee' %}bg-danger
+                                            {% else %}bg-warning{% endif %}">
+                                            {{ commande.get_statut_display }}
+                                        </span>
+                                    </div>
+                                    <div class="text-end">
+                                        <strong>{{ commande.total }}€</strong><br>
+                                        <a href="{% url 'boutique:detail_commande' commande.numero_commande %}" class="btn btn-outline-primary btn-sm">
+                                            Détails
+                                        </a>
+                                    </div>
+                                </div>
+                                {% if not forloop.last %}<hr>{% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                            <h5>Aucune commande</h5>
+                            <p class="text-muted">Vous n'avez pas encore passé de commande.</p>
+                            <a href="{% url 'boutique:home' %}" class="btn btn-primary">
+                                <i class="fas fa-store"></i> Découvrir nos produits
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

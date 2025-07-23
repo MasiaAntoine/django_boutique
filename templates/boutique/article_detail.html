@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <!-- Image de l'article -->
+        {% if article.image %}
+            <img src="{{ article.image.url }}" class="img-fluid rounded shadow" alt="{{ article.nom }}">
+        {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center rounded shadow" style="height: 400px;">
+                <i class="fas fa-image text-muted fa-5x"></i>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <!-- Titre et catégorie -->
+                <h1 class="card-title">{{ article.nom }}</h1>
+                <p class="text-muted">
+                    <i class="fas fa-tag"></i>
+                    <a href="{% url 'boutique:categorie' article.categorie.id %}" class="text-decoration-none">
+                        {{ article.categorie.nom }}
+                    </a>
+                </p>
+
+                <!-- Description courte -->
+                {% if article.description_courte %}
+                    <p class="lead">{{ article.description_courte }}</p>
+                {% endif %}
+
+                <!-- Prix -->
+                <div class="mb-3">
+                    {% if article.en_promotion %}
+                        <span class="badge bg-danger fs-6 mb-2">-{{ article.pourcentage_reduction }}%</span>
+                        <br>
+                        <span class="text-muted text-decoration-line-through fs-5">{{ article.prix }}€</span>
+                        <span class="text-success fs-3 fw-bold ms-2">{{ article.prix_final }}€</span>
+                    {% else %}
+                        <span class="text-primary fs-3 fw-bold">{{ article.prix }}€</span>
+                    {% endif %}
+                </div>
+
+                <!-- Stock -->
+                <div class="mb-3">
+                    {% if article.stock > 0 %}
+                        <span class="text-success">
+                            <i class="fas fa-check-circle"></i> En stock ({{ article.stock }} disponible{{ article.stock|pluralize }})
+                        </span>
+                    {% else %}
+                        <span class="text-danger">
+                            <i class="fas fa-times-circle"></i> Rupture de stock
+                        </span>
+                    {% endif %}
+                </div>
+
+                <!-- Formulaire d'ajout au panier -->
+                {% if user.is_authenticated and not user.is_superuser and article.disponible %}
+                    <form method="post" action="{% url 'boutique:ajouter_au_panier' article.id %}" class="mb-3">
+                        {% csrf_token %}
+                        <div class="row g-2">
+                            <div class="col-auto">
+                                <label for="quantite" class="form-label">Quantité :</label>
+                            </div>
+                            <div class="col-auto">
+                                <input type="number" class="form-control" id="quantite" name="quantite" value="1" min="1" max="{{ article.stock }}" style="width: 80px;">
+                            </div>
+                            <div class="col">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-shopping-cart"></i> Ajouter au panier
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                {% elif user.is_authenticated and user.is_superuser %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Vous êtes connecté en tant qu'administrateur.
+                    </div>
+                {% elif not user.is_authenticated %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <a href="{% url 'accounts:login' %}" class="alert-link">Connectez-vous</a> pour ajouter cet article à votre panier.
+                    </div>
+                {% else %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i> Article indisponible
+                    </div>
+                {% endif %}
+
+                <!-- Navigation -->
+                <div class="mt-3">
+                    <a href="{% url 'boutique:home' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Retour à la boutique
+                    </a>
+                    <a href="{% url 'boutique:categorie' article.categorie.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-tag"></i> Voir la catégorie
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Description complète -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-info-circle"></i> Description</h3>
+            </div>
+            <div class="card-body">
+                <div style="white-space: pre-line;">{{ article.description }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Articles similaires -->
+{% if articles_similaires %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="mb-3"><i class="fas fa-lightbulb"></i> Articles similaires</h3>
+            <div class="row">
+                {% for article_similaire in articles_similaires %}
+                    <div class="col-md-6 col-lg-3 mb-3">
+                        <div class="card h-100">
+                            {% if article_similaire.image %}
+                                <img src="{{ article_similaire.image.url }}" class="card-img-top" style="height: 150px; object-fit: cover;" alt="{{ article_similaire.nom }}">
+                            {% else %}
+                                <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                    <i class="fas fa-image text-muted fa-2x"></i>
+                                </div>
+                            {% endif %}
+                            <div class="card-body d-flex flex-column">
+                                <h6 class="card-title">{{ article_similaire.nom }}</h6>
+                                <p class="card-text text-muted small flex-grow-1">{{ article_similaire.description_courte|truncatechars:50 }}</p>
+                                <div class="mt-auto">
+                                    {% if article_similaire.en_promotion %}
+                                        <span class="badge bg-danger mb-1">-{{ article_similaire.pourcentage_reduction }}%</span>
+                                        <br>
+                                        <span class="text-muted text-decoration-line-through">{{ article_similaire.prix }}€</span>
+                                        <strong class="text-success">{{ article_similaire.prix_final }}€</strong>
+                                    {% else %}
+                                        <strong>{{ article_similaire.prix }}€</strong>
+                                    {% endif %}
+                                    <br>
+                                    <a href="{% url 'boutique:article_detail' article_similaire.id %}" class="btn btn-sm btn-outline-primary mt-1">Voir</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

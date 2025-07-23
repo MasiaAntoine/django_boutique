@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon profil - Boutique en ligne{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-user-edit"></i> Mon profil</h1>
+
+        <div class="row">
+            <div class="col-md-4">
+                <!-- Menu du profil -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-user-circle"></i> Navigation</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action active">
+                            <i class="fas fa-edit"></i> Modifier mon profil
+                        </a>
+                        {% if not user.is_superuser %}
+                            <a href="{% url 'boutique:compte_client' %}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-dashboard"></i> Mon compte
+                            </a>
+                            <a href="{% url 'boutique:mes_commandes' %}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-box"></i> Mes commandes
+                            </a>
+                            <a href="{% url 'boutique:panier' %}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-shopping-cart"></i> Mon panier
+                                {% if panier_total %}
+                                    <span class="badge bg-primary ms-auto">{{ panier_total }}</span>
+                                {% endif %}
+                            </a>
+                        {% else %}
+                            <a href="{% url 'dashboard:dashboard' %}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-chart-line"></i> Dashboard
+                            </a>
+                            <a href="{% url 'admin:index' %}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-cog"></i> Administration
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Informations du compte -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6><i class="fas fa-info-circle"></i> Informations du compte</h6>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Type de compte :</strong><br>
+                            {% if user.is_superuser %}
+                                <span class="badge bg-danger">Super Utilisateur</span>
+                            {% else %}
+                                <span class="badge bg-primary">Client</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Membre depuis :</strong><br>{{ user.date_joined|date:"d/m/Y" }}</p>
+                        <p><strong>Dernière connexion :</strong><br>
+                            {% if user.last_login %}
+                                {{ user.last_login|date:"d/m/Y à H:i" }}
+                            {% else %}
+                                Jamais connecté
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <!-- Formulaire de modification du profil -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-edit"></i> Modifier mes informations</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <!-- Informations de base -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="username" class="form-label">Nom d'utilisateur *</label>
+                                    <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                                    <div class="form-text">Ce nom sera visible publiquement</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email *</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="first_name" class="form-label">Prénom</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="last_name" class="form-label">Nom</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}">
+                                </div>
+                            </div>
+
+                            <!-- Informations du profil -->
+                            <h6 class="mt-4 mb-3"><i class="fas fa-address-card"></i> Informations complémentaires</h6>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Téléphone</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.profile.phone }}" placeholder="Ex: 01 23 45 67 89">
+                                <div class="form-text">Utilisé pour la livraison et le service client</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Adresse de livraison</label>
+                                <textarea class="form-control" id="address" name="address" rows="3" placeholder="Votre adresse complète">{{ user.profile.address }}</textarea>
+                                <div class="form-text">Cette adresse sera utilisée par défaut pour vos commandes</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="birth_date" class="form-label">Date de naissance</label>
+                                <input type="date" class="form-control" id="birth_date" name="birth_date" value="{{ user.profile.birth_date|date:'Y-m-d' }}">
+                                <div class="form-text">Optionnel - pour les offres spéciales</div>
+                            </div>
+
+                            <!-- Boutons d'action -->
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Enregistrer les modifications
+                                </button>
+                                <a href="{% if user.is_superuser %}{% url 'dashboard:dashboard' %}{% else %}{% url 'boutique:compte_client' %}{% endif %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left"></i> Retour
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Section changement de mot de passe -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-lock"></i> Sécurité du compte</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Pour modifier votre mot de passe, utilisez le formulaire ci-dessous :</p>
+
+                        <form method="post" action="{% url 'accounts:profile' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="change_password">
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label for="current_password" class="form-label">Mot de passe actuel *</label>
+                                    <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="new_password1" class="form-label">Nouveau mot de passe *</label>
+                                    <input type="password" class="form-control" id="new_password1" name="new_password1" required>
+                                    <div class="form-text">Minimum 8 caractères</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="new_password2" class="form-label">Confirmer le nouveau mot de passe *</label>
+                                    <input type="password" class="form-control" id="new_password2" name="new_password2" required>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-key"></i> Changer le mot de passe
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                {% if not user.is_superuser %}
+                    <!-- Statistiques client -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-bar"></i> Mes statistiques</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3">
+                                        <h4 class="text-primary">{{ user.commandes.count }}</h4>
+                                        <p class="mb-0">Commande{{ user.commandes.count|pluralize }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3">
+                                        <h4 class="text-success">{{ total_depense }}€</h4>
+                                        <p class="mb-0">Total dépensé</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-3">
+                                        <h4 class="text-info">
+                                            {% if user.commandes.exists %}
+                                                {{ user.commandes.last.created_at|date:"d/m/Y" }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </h4>
+                                        <p class="mb-0">Dernière commande</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.list-group-item.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.form-label {
+    font-weight: 600;
+}
+
+.border.rounded.p-3 {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %}
