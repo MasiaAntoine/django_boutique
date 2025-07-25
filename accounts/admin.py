@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
+
 from .models import Profile
 
 
@@ -21,7 +22,7 @@ class CustomUserAdmin(UserAdmin):
     inlines = (ProfileInline,)
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_user_type')
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'profile__is_client')
-    
+
     def get_user_type(self, obj):
         """Affiche le type d'utilisateur"""
         if obj.is_superuser:
@@ -39,7 +40,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_filter = ('is_client', 'created_at')
     search_fields = ('user__username', 'user__first_name', 'user__last_name', 'user__email')
     readonly_fields = ('created_at', 'updated_at')
-    
+
     fieldsets = (
         ('Utilisateur', {
             'fields': ('user',)
@@ -55,7 +56,7 @@ class ProfileAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-    
+
     def get_full_name(self, obj):
         """Affiche le nom complet"""
         return obj.full_name or "Non renseigné"

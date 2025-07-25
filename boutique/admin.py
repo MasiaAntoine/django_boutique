@@ -133,11 +133,91 @@ class CommandeAdmin(admin.ModelAdmin):
         return HttpResponseRedirect(api_url)
 
     def import_csv_view(self, request):
-        """Vue pour afficher le formulaire d'import CSV"""
+        """Vue pour traiter l'import CSV"""
         if request.method == 'POST' and request.FILES.get('csv_file'):
-            # Rediriger vers l'API d'import ou le dashboard pour l'import
+            # Traiter le fichier en utilisant la même logique que l'API
             try:
-                messages.success(request, "Utilisez le dashboard ou l'API directement pour l'import CSV.")
+                import csv
+                import io
+
+                from django.contrib.auth.models import User
+                from django.core.exceptions import ValidationError
+
+                csv_file = request.FILES['csv_file']
+
+                if not csv_file.name.endswith('.csv'):
+                    messages.error(request, "Le fichier doit être au format CSV")
+                    return HttpResponseRedirect(reverse('admin:boutique_commande_changelist'))
+
+                # Lire le fichier CSV
+                decoded_file = csv_file.read().decode('utf-8-sig')  # Support du BOM UTF-8
+                io_string = io.StringIO(decoded_file)
+                reader = csv.DictReader(io_string, delimiter=';')
+
+                imported_count = 0
+                errors = []
+
+                for row_num, row in enumerate(reader, start=2):  # Start=2 car ligne 1 = headers
+                    try:
+                        # Validation des champs requis
+                        required_fields = ['Numero_Commande', 'Client_Username', 'Total_Commande']
+                        for field in required_fields:
+                            if not row.get(field):
+                                raise ValidationError(f'Champ requis manquant: {field}')
+
+                        # Vérifier si la commande existe déjà
+                        if Commande.objects.filter(numero_commande=row['Numero_Commande']).exists():
+                            errors.append(f"Ligne {row_num}: Commande {row['Numero_Commande']} déjà existante")
+                            continue
+
+                        # Récupérer l'utilisateur
+                        try:
+                            user = User.objects.get(username=row['Client_Username'])
+                        except User.DoesNotExist:
+                            errors.append(f"Ligne {row_num}: Utilisateur {row['Client_Username']} introuvable")
+                            continue
+
+                        # Convertir le total (format français vers décimal)
+                        total_str = row['Total_Commande'].replace(',', '.')
+                        total = float(total_str)
+
+                        # Fonction pour convertir le statut
+                        def get_status_from_display(display_name):
+                            status_mapping = {
+                                'En attente': 'en_attente',
+                                'Confirmée': 'confirmee',
+                                'Expédiée': 'expediee',
+                                'Livrée': 'livree',
+                                'Annulée': 'annulee',
+                            }
+                            return status_mapping.get(display_name, 'en_attente')
+
+                        # Créer la commande
+                        commande = Commande.objects.create(
+                            numero_commande=row['Numero_Commande'],
+                            user=user,
+                            statut=get_status_from_display(row.get('Statut', 'En attente')),
+                            total=total,
+                            adresse_livraison=row.get('Adresse_Livraison', ''),
+                            telephone=row.get('Telephone', ''),
+                            notes=row.get('Notes', '')
+                        )
+
+                        imported_count += 1
+
+                    except Exception as e:
+                        errors.append(f"Ligne {row_num}: {str(e)}")
+
+                # Messages de résultat
+                if imported_count > 0:
+                    messages.success(request, f"{imported_count} commande(s) importée(s) avec succès")
+
+                if errors:
+                    for error in errors[:5]:  # Limiter à 5 erreurs pour l'affichage
+                        messages.warning(request, error)
+                    if len(errors) > 5:
+                        messages.warning(request, f"... et {len(errors)-5} autres erreurs")
+
             except Exception as e:
                 messages.error(request, f"Erreur lors de l'import: {e}")
 
