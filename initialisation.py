@@ -55,7 +55,7 @@ def create_admin_user():
             is_superuser=True
         )
 
-        # Mettre à jour le profil pour indiquer que ce n'est pas un client
+        # Modifier le profil créé automatiquement par le signal
         admin.profile.is_client = False
         admin.profile.save()
 
@@ -85,7 +85,7 @@ def create_client_user():
             is_superuser=False
         )
 
-        # Le profil est automatiquement créé avec is_client=True par défaut
+        # Le profil est automatiquement créé avec is_client=True par défaut grâce au signal
         print(f"✅ Compte client créé : {client.email}")
         return True
 
